@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+    GlueDatabase:
+        Type: AWS::Glue::Database
+        Properties: 
+          CatalogId: !Ref AWS::AccountId
+          DatabaseInput: 
+            Description: test database from cf
+            LocationUri: s3://sai-src-bucket/plaintext
+            Name: sai_test_db_cf
+    GlueTable:
+        Type: AWS::Glue::Table
+        Properties: 
+          CatalogId: !Ref AWS::AccountId
+          DatabaseName: !Ref GlueDatabase
+          TableInput: 
+              Name: sai_test_table_cf
+              PartitionKeys:
+                  - Name: year
+                    Type: int
+                  - Name: month
+                    Type: int
+                  - Name: day
+                    Type: int
+              StorageDescriptor: 
+                Columns: 
+                  - Name: request_timestamp
+                    Type: string
+                  - Name: elb_name
+                    Type: string
+                  - Name: request_ip
+                    Type: string
+                  - Name: request_port
+                    Type: int
+                  - Name: backend_port
+                    Type: int
+                  - Name: request_processing_time
+                    Type: double
+                  - Name: backend_processing_time
+                    Type: double
+                  - Name: client_response_time
+                    Type: double
+                  - Name: elb_response_code
+                    Type: string
+                  - Name: backend_ip
+                    Type: string
+                  - Name: backend_response_code
+                    Type: string
+                  - Name: received_bytes
+                    Type: bigint
+                  - Name: sent_bytes
+                    Type: bigint
+                  - Name: request_verb
+                    Type: string
+                  - Name: url
+                    Type: string
+                  - Name: protocol
+                    Type: string
+                  - Name: user_agent
+                    Type: string
+                  - Name: ssl_cipher
+                    Type: string
+                  - Name: ssl_protocol
+                    Type: string
+                InputFormat: org.apache.hadoop.mapred.TextInputFormat
+                OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+                Location: s3://sai-src-bucket/plaintext
+                SerdeInfo: 
+                    SerializationLibrary: org.apache.hadoop.hive.serde2.RegexSerDe
+                    Parameters:
+                        serialization.format: 1
+                        input.regex: ([^ ]*) ([^ ]*) ([^ ]*):([0-9]*) ([^ ]*)[:-]([0-9]*) ([-.0-9]*) ([-.0-9]*) ([-.0-9]*) (|[-0-9]*) (-|[-0-9]*) ([-0-9]*) ([-0-9]*) \"([^ ]*) ([^ ]*) (- |[^ ]*)\" ("[^"]*") ([A-Z0-9-]+) ([A-Za-z0-9.-]*)$
+              TableType: EXTERNAL_TABLE
